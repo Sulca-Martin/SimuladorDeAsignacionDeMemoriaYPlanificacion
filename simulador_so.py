@@ -1,18 +1,16 @@
 import csv
 import os
 
-# ------------------------- Constantes del Sistema -------------------------
+#constantes
 MEM_SO = 100        # Memoria reservada para el Sistema Operativo (100K)
 MEM_USUARIO = 450   # Memoria disponible para procesos de usuario (450K)
 MAX_PROCESOS = 10   # Límite máximo de procesos admitidos por simulación
 MAX_MULTI = 5       # Grado máximo de multiprogramación (Ejecución + Listos + Listos/Suspendidos)
 
-
 def limpiar_pantalla():
     """Limpia la consola según el sistema operativo."""
     os.system("cls" if os.name == "nt" else "clear")
-
-
+    
 def validar(id_proc, tam, llegada, irrup, procs):
     """Valida las restricciones de negocio y memoria para un proceso."""
     if tam <= 0 or llegada < 0 or irrup <= 0:
@@ -24,8 +22,6 @@ def validar(id_proc, tam, llegada, irrup, procs):
     if len(procs) >= MAX_PROCESOS:
         return f"Máximo de {MAX_PROCESOS} procesos alcanzado."
     return ""
-
-
 def leer_archivo(nombre):
     """Lee un archivo CSV con columnas: Proceso, TA, TI, Tamaño (K)."""
     procs = []
@@ -59,7 +55,6 @@ def leer_archivo(nombre):
         print("[ERROR] No se pudo abrir el archivo. Verifica el nombre o la ruta.")
     return sorted(procs, key=lambda p: p["llegada"])
 
-
 def cargar_manual():
     """Permite el ingreso interactivo de procesos por teclado."""
     procs = []
@@ -91,14 +86,12 @@ def cargar_manual():
             })
     return sorted(procs, key=lambda p: p["llegada"])
 
-
 def crear_memoria():
     """Inicializa la memoria principal con la partición fija del SO y un bloque libre de usuario."""
     return [
         {"inicio": 0, "tam": MEM_SO, "proc": "SO"},
         {"inicio": MEM_SO, "tam": MEM_USUARIO, "proc": None}
     ]
-
 
 def asignar_best_fit(memoria, proc):
     """
@@ -123,7 +116,6 @@ def asignar_best_fit(memoria, proc):
     hueco["tam"], hueco["proc"] = proc["tam"], proc["id"]
     return True
 
-
 def liberar(memoria, id_proc):
     """Libera la partición ocupada por el proceso y compacta huecos libres adyacentes (coalescing)."""
     for p in memoria:
@@ -138,13 +130,11 @@ def liberar(memoria, id_proc):
         else:
             i += 1
 
-
 def texto_cola(lista):
     """Formatea la visualización de una cola ordenada por tiempo restante (SRTF)."""
     if not lista:
         return "(vacía)"
     return "  ".join(f"{p['id']}(TR={p['restante']})" for p in sorted(lista, key=lambda x: x["restante"]))
-
 
 def mostrar_estado(t, eventos, procs, memoria, en_cpu):
     """Muestra la fotografía completa del sistema en el instante t."""
@@ -162,7 +152,6 @@ def mostrar_estado(t, eventos, procs, memoria, en_cpu):
         print("  Ocioso (ningún proceso en ejecución)")
     else:
         print(f"  Ejecutando {en_cpu['id']} (restante {en_cpu['restante']} de {en_cpu['irrup']})")
-
     print("\nTabla de particiones de memoria:")
     print(f"  {'ID':<4}{'Comienzo':<10}{'Tamaño':<9}{'Proceso':<10}{'Frag. interna'}")
     for i, p in enumerate(memoria):
@@ -218,7 +207,8 @@ def simular(procs):
                 eventos.append(f"{p['id']}: Listo/Suspendido -> Listo (se le asignó memoria)")
                 hay_evento = True
 
-        # 3) Planificador de Largo Plazo: Admisión al sistema (Nuevo -> Listo o Listo/Suspendido)
+        # 3) Planificador de Largo Plazo: Admisión al sistema, despacha los procesos del Nuevo a listo o listo/suspendido
+        #dependiendo si hay o no espacio en memoria para asignar
         activos = sum(1 for p in procs if p["estado"] in ("Ejecutando", "Listo", "Listo/Suspendido"))
         for p in procs:
             if p["estado"] == "Nuevo" and p["llegada"] <= t:
@@ -259,14 +249,15 @@ def simular(procs):
                 en_cpu = candidato
                 hay_evento = True
 
-        # 5) Mostrar estado solo en instantes con cambios relevantes
+        # 5) Mostrar estado solo en instantes con cambios relevantes,esto se hace ya que no tiene mucho sentido mostrar por pantalla por cada batido de reloj, 
+        #puesto que hay ciclos en os que nada sucede, por eso se opta por hacerlo cada vez que sucede un evento
         if hay_evento:
             mostrar_estado(t, eventos, procs, memoria, en_cpu)
             input("\nEnter para continuar...")
 
         # 6) Avance del reloj del sistema
         if en_cpu:
-            en_cpu["restante"] -= 1
+            en_cpu["restante"] -= 1 
         t += 1
 
     # Informe estadístico final
@@ -291,7 +282,6 @@ def simular(procs):
     print(f"  Rendimiento del sistema    : {n / t:.4f} trabajos terminados por unidad de tiempo")
     print("=" * 62)
     input("\nEnter para volver al menú...")
-
 
 def main():
     """Menú principal de la aplicación."""
@@ -319,7 +309,6 @@ def main():
             input("\n[ERROR] Opción inválida. Enter para continuar...")
 
     print("\n¡Gracias por usar el simulador!")
-
 
 if __name__ == "__main__":
     main()
