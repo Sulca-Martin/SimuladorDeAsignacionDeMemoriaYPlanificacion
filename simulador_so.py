@@ -2,10 +2,10 @@ import csv
 import os
 
 #constantes
-MEM_SO = 100        # Memoria reservada para el Sistema Operativo (100K)
-MEM_USUARIO = 450   # Memoria disponible para procesos de usuario (450K)
-MAX_PROCESOS = 10   # Límite máximo de procesos admitidos por simulación
-MAX_MULTI = 5       # Grado máximo de multiprogramación (Ejecución + Listos + Listos/Suspendidos)
+MEM_SO = 100        # el so pesa 100k por consigna
+MEM_USUARIO = 450   # se destina 450k para tareas de usuario
+MAX_PROCESOS = 10   # por consigna limite máximo de procesos admitidos por simulación
+MAX_MULTI = 5       # condicion necesaria para el funcionamiento del simulador (la suma de estados en Ejecución + Listos + Listos/Suspendidos<5)
 
 def limpiar_pantalla():
     """Limpia la consola según el sistema operativo."""
