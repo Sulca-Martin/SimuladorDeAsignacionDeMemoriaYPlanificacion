@@ -30,7 +30,7 @@ Para ejecutar el programa debe tener instalado Python 3.6 o superior.
 	2). Abre una terminal o consola en esa carpeta.
    
 	3). Ejecuta el comando:
- python simulador_so.pyB
+ python simulador_so.py
 
 ). 
 
