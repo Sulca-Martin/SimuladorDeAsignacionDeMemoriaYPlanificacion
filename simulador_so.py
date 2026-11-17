@@ -260,8 +260,7 @@ def simular(procs):
         t += 1
 
     # Informe estadístico final
-    limpiar_pantalla()
-    print("=" * 62)
+    print("\n\n" + "=" * 62)
     print(" INFORME ESTADÍSTICO")
     print("=" * 62)
     print(f"  {'ID':<6}{'Arribo':<8}{'Irrup.':<8}{'Fin':<6}{'Retorno':<9}{'Espera'}")
