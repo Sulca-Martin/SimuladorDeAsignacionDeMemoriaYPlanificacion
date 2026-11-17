@@ -139,8 +139,7 @@ def texto_cola(lista):
 
 def mostrar_estado(t, eventos, procs, memoria, en_cpu):
     """Se muestra por pantalla en instante t, como esta el sistema."""
-    limpiar_pantalla()
-    print("=" * 62)
+    print("\n" + "=" * 62)
     print(f" INSTANTE t = {t}")
     print("=" * 62)
 
@@ -173,7 +172,6 @@ def mostrar_estado(t, eventos, procs, memoria, en_cpu):
     for p in procs:
         print(f"  {p['id']:<6}{p['estado']:<19}{p['tam']:<8}{p['restante']}")
     print("=" * 62)
-
 
 def simular(procs):
     """Motor principal de simulación discreta tiempo a tiempo."""
