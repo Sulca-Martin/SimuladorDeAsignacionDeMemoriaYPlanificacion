@@ -40,7 +40,7 @@ def leer_archivo(nombre):
 
                 err = validar(pid, tam, llegada, irrup, procs)
                 if not err:
-                    procs.append({
+                    procs.append({ #se crea el PCB
                         "id": pid,
                         "tam": tam,
                         "llegada": llegada,
@@ -55,7 +55,7 @@ def leer_archivo(nombre):
         print("[ERROR] No se pudo abrir el archivo. Verifica el nombre o la ruta.")
     return sorted(procs, key=lambda p: p["llegada"])
 
-def cargar_manual():
+def cargar_manual(): #funcion para cargar por pantalla procesos (siguiendo la estructura especificada).
     """Permite el ingreso interactivo de procesos por teclado."""
     procs = []
     print(f"\nCarga manual (máx {MAX_PROCESOS}). Deja el ID vacío para terminar.")
@@ -95,7 +95,7 @@ def crear_memoria():
 
 def asignar_best_fit(memoria, proc):
     """
-    Asigna memoria dinámica (MVT) usando el algoritmo Best-Fit (Mejor Ajuste).
+    Asigna memoria dinámica usando el algoritmo Best-Fit.
     Busca el hueco libre más pequeño donde quepa el proceso y divide la partición si sobra espacio.
     """
     mejor = min(
@@ -107,22 +107,23 @@ def asignar_best_fit(memoria, proc):
         return False
 
     hueco = memoria[mejor]
-    if hueco["tam"] > proc["tam"]:
+    if hueco["tam"] > proc["tam"]: #Si el hueco es más grande que el proceso, se divide.
         memoria.insert(mejor + 1, {
             "inicio": hueco["inicio"] + proc["tam"],
             "tam": hueco["tam"] - proc["tam"],
             "proc": None
         })
-    hueco["tam"], hueco["proc"] = proc["tam"], proc["id"]
+    hueco["tam"], hueco["proc"] = proc["tam"], proc["id"] # Asigna el bloque al proceso
     return True
 
 def liberar(memoria, id_proc):
-    """Libera la partición ocupada por el proceso y compacta huecos libres adyacentes (coalescing)."""
-    for p in memoria:
+    """Libera la partición ocupada por el proceso y compacta huecos libres adyacentes 
+    se aplica coalescing, es decir, se verifica que las particiones esten libres para fusionar."""
+    for p in memoria: 
         if p["proc"] == id_proc:
-            p["proc"] = None
-
-    i = 0
+            p["proc"] = None #se marca el hueco como libre
+#se aplica coalescing, se verifica que el hueco vecino tambien este libre y los une, para generar una particion mas grande.
+    i = 0 
     while i < len(memoria) - 1:
         if memoria[i]["proc"] is None and memoria[i + 1]["proc"] is None:
             memoria[i]["tam"] += memoria[i + 1]["tam"]
@@ -131,13 +132,13 @@ def liberar(memoria, id_proc):
             i += 1
 
 def texto_cola(lista):
-    """Formatea la visualización de una cola ordenada por tiempo restante (SRTF)."""
+    """Formatea la visualización de una cola ordenada por tiempo restante."""
     if not lista:
         return "(vacía)"
     return "  ".join(f"{p['id']}(TR={p['restante']})" for p in sorted(lista, key=lambda x: x["restante"]))
 
 def mostrar_estado(t, eventos, procs, memoria, en_cpu):
-    """Muestra la fotografía completa del sistema en el instante t."""
+    """Se muestra por pantalla en instante t, como esta el sistema."""
     limpiar_pantalla()
     print("=" * 62)
     print(f" INSTANTE t = {t}")
@@ -191,7 +192,7 @@ def simular(procs):
         eventos = []
         hay_evento = False
 
-        # 1) Finalización del proceso actual en CPU
+        #Planificador a corto plazo: controla que se finalice la ejecucion del proceso en CPU
         if en_cpu and en_cpu["restante"] == 0:
             en_cpu.update({"estado": "Terminado", "fin": t})
             liberar(memoria, en_cpu["id"])
@@ -200,14 +201,14 @@ def simular(procs):
             terminados += 1
             hay_evento = True
 
-        # 2) Planificador de Mediano Plazo: Swapping-in (Listo/Suspendido -> Listo)
+        #Planificador de Mediano Plazo: Swapping-in (Listo/Suspendido -> Listo)
         for p in sorted([p for p in procs if p["estado"] == "Listo/Suspendido"], key=lambda x: x["restante"]):
             if asignar_best_fit(memoria, p):
                 p["estado"] = "Listo"
                 eventos.append(f"{p['id']}: Listo/Suspendido -> Listo (se le asignó memoria)")
                 hay_evento = True
 
-        # 3) Planificador de Largo Plazo: Admisión al sistema, despacha los procesos del Nuevo a listo o listo/suspendido
+        #Planificador de Largo Plazo: Admisión al sistema, despacha los procesos del Nuevo a listo o listo/suspendido
         #dependiendo si hay o no espacio en memoria para asignar
         activos = sum(1 for p in procs if p["estado"] in ("Ejecutando", "Listo", "Listo/Suspendido"))
         for p in procs:
@@ -229,7 +230,7 @@ def simular(procs):
                     eventos.append(f"{p['id']} queda en Nuevo (límite de multiprogramación: {MAX_MULTI})")
                     hay_evento = True
 
-        # 4) Planificador de Corto Plazo: SRTF (Shortest Remaining Time First - Expropiativo)
+        # Planificador de Corto Plazo: SRTF (se aplica expropiacion de cpu)
         listos = [p for p in procs if p["estado"] == "Listo"]
         candidato = min(listos, key=lambda x: x["restante"], default=None) if listos else None
 
@@ -249,13 +250,13 @@ def simular(procs):
                 en_cpu = candidato
                 hay_evento = True
 
-        # 5) Mostrar estado solo en instantes con cambios relevantes,esto se hace ya que no tiene mucho sentido mostrar por pantalla por cada batido de reloj, 
+        #Mostrar estado solo en instantes con cambios relevantes,esto se hace ya que no tiene mucho sentido mostrar por pantalla por cada batido de reloj, 
         #puesto que hay ciclos en os que nada sucede, por eso se opta por hacerlo cada vez que sucede un evento
         if hay_evento:
             mostrar_estado(t, eventos, procs, memoria, en_cpu)
             input("\nEnter para continuar...")
 
-        # 6) Avance del reloj del sistema
+        # Se avanza el reloj del sistema
         if en_cpu:
             en_cpu["restante"] -= 1 
         t += 1
